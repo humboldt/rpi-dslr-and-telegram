@@ -25,4 +25,4 @@ Chat Command    |Description
 
 ##### Furter information.
 More about this software, and how to use it:
---- no blog link ---
+https://deloarts.wordpress.com/2016/01/15/dslr-telegram/
