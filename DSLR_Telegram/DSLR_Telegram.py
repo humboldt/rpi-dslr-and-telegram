@@ -36,7 +36,7 @@ import subprocess
 
 Bot_Name = "CameraBot"
 Bot_Token = "INSERT TOKEN HERE"
-
+	
 Admin_Users = [00000000] # INSERT USER ID !
 Authorized_Users = []
 
@@ -369,7 +369,7 @@ if __name__ == "__main__":
 	# Setup bot
 	Bot = telepot.Bot(Bot_Token)
 	Bot_Info = Bot.getMe()
-	Bot.notifyOnMessage(messageHandler)
+	Bot.message_loop(messageHandler)
 
 	# Startup phrase
 	os.system('clear')
