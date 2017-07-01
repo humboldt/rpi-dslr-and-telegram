@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TELEBOT - CONTROL DSLR
+TELEbot - CONTROL DSLR
 Version 1.0.0
 DELOARTS Research Inc.
 Philip Delorenzo
@@ -34,18 +34,15 @@ import telepot
 import datetime
 import subprocess
 
-Bot_Name = "CameraBot"
-Bot_Token = "INSERT TOKEN HERE"
+botName = "Camerabot"
+botToken = "INSERT TOKEN HERE"
 	
-Admin_Users = [00000000] # INSERT USER ID !
-Authorized_Users = []
+adminUsers = [00000000] # INSERT USER ID !
+authUsers = []
 
-#################################################################################################
-##### ROUTINES ##################################################################################
-#################################################################################################
 def getDictFromCmd(Command):
-	Buffer = {}
-	Shell_Output = subprocess.check_output(Command, shell=True)
+	buffer = {}
+	shellOut = subprocess.check_output(Command, shell=True)
 
 	# Choice is the keyword! It is returned from gphoto2 into the shell.
 	# We now take all the shell's return and look at it.
@@ -54,53 +51,51 @@ def getDictFromCmd(Command):
 	# 'Current' is the keyword for the current value.
 
 	# This only works for ISO, Av, Tv, etc. and not for e.g. the connected cameras
-	for Line in Shell_Output.split('\n'):
-		if "Choice: " in Line:
-			Buffer[Line.split(' ')[1]] = Line.split(' ')[2]
-		elif "Current: " in Line:
-			Buffer['C'] = Line.split(' ')[1]
+	for line in shellOut.split('\n'):
+		if "Choice: " in line:
+			buffer[line.split(' ')[1]] = line.split(' ')[2]
+		elif "Current: " in line:
+			buffer['C'] = line.split(' ')[1]
 		else:
 			pass
 
-	return Buffer
-########################################################################################################################
-##### PROCESS COMMANDS (ADMIN) #########################################################################################
-########################################################################################################################
-def commandAddUser(ID, Command):
-	User_ID = Command.split(' ')[1]
-	User_First_Name = Command.split(' ')[2]
-	User_Last_Name = Command.split(' ')[3]
+	return buffer
 
-	if not int(User_ID) in Authorized_Users:
-		Authorized_Users.append(int(User_ID))
+def commandAddUser(ID, Command):
+	userID = Command.split(' ')[1]
+	userFirstName = Command.split(' ')[2]
+	userLastName = Command.split(' ')[3]
+
+	if not int(userID) in authUsers:
+		authUsers.append(int(userID))
 
 		# Read data from file
-		File_Content = []
-		File_Object = open("auth_usr", "r")
-		for Line in File_Object:
-			File_Content.append(Line.split('\n')[0])
-		File_Object.close()
+		fileContent = []
+		fileObject = open("auth_usr", "r")
+		for line in fileObject:
+			fileContent.append(line.split('\n')[0])
+		fileObject.close()
 
 		# Write date + new user
-		File_Content.append(Command.split("/addUser ")[1])
-		File_Object = open("auth_usr", "w")
-		for Line in File_Content:
-			File_Object.write(Line + "\n")
-		File_Object.close()
+		fileContent.append(Command.split("/addUser ")[1])
+		fileObject = open("auth_usr", "w")
+		for line in fileContent:
+			fileObject.write(line + "\n")
+		fileObject.close()
 
-		Bot.sendMessage(ID, "User added.")
+		bot.sendMessage(ID, "User added.")
 		print "\n  Message sent."
 		print "  User added."
 
 	else:
-		Bot.sendMessage(ID, "User already exists.")
+		bot.sendMessage(ID, "User already exists.")
 		print "\n  Message sent."
 		print "  User exists."
 ########################################################################################################################
 ##### PROCESS COMMANDS (USER) ##########################################################################################
 ########################################################################################################################
 def commandStart(ID):
-	Bot.sendMessage(ID, "Hello.\nI'm " + Bot_Name + ". I'm here to control your DSLR! You can send me commands (get them with /info) to make me do things for you.")
+	bot.sendMessage(ID, "Hello.\nI'm " + botName + ". I'm here to control your DSLR! You can send me commands (get them with /info) to make me do things for you.")
 	print "\n  Message sent."
 
 def commandInfo(ID):
@@ -114,114 +109,114 @@ def commandInfo(ID):
 	Info_Message += "/getTV: Returns available TV value.\n"
 	Info_Message += "/setTV <value>: Sets TV value.\n"
 	Info_Message += "/pic: Takes picture and sends it.\n"
-	Bot.sendMessage(ID, Info_Message)
+	bot.sendMessage(ID, Info_Message)
 	print "\n  Message sent." 
 
 def commandGetCam(ID):
-	Shell_Output = subprocess.check_output('gphoto2 --auto-detect', shell=True)
-	Cam_List = []
+	shellOut = subprocess.check_output('gphoto2 --auto-detect', shell=True)
+	camList = []
 
-	for Line in Shell_Output.split('\n'):
-		if Line.startswith("Modell") or Line.startswith("---"):
+	for line in shellOut.split('\n'):
+		if line.startswith("Modell") or line.startswith("---"):
 			pass
 		else:
-			Cam_List.append(Line.split('   ')[0])
+			camList.append(line.split('   ')[0])
 
-	if Cam_List == []:
-		Bot.sendMessage(ID, "No camera connected.")
+	if camList == []:
+		bot.sendMessage(ID, "No camera connected.")
 		print "\n  Message sent."
 		print "No camera connected."
 	else:
-		Bot_Message = "Connected cameras:\n"
-		for Line in Cam_List:
-			Bot_Message += Line + "\n"
-		Bot.sendMessage(ID, Bot_Message)
+		botMsg = "Connected cameras:\n"
+		for line in camList:
+			botMsg += line + "\n"
+		bot.sendMessage(ID, botMsg)
 		print "\n  Message sent."
 
 def commandGetISO(ID):
-	ISO_Available = getDictFromCmd('gphoto2 --get-config iso')
+	isoAvailable = getDictFromCmd('gphoto2 --get-config iso')
 
-	Bot_Message = "Available ISO:\n\n"
-	for Key in ISO_Available:
+	botMsg = "Available ISO:\n\n"
+	for Key in isoAvailable:
 		if Key != 'C':
-			Bot_Message += Key + ": " + ISO_Available[Key] + "\n"
-	Bot_Message += "\nCurrent ISO: " + ISO_Available['C']
+			botMsg += Key + ": " + isoAvailable[Key] + "\n"
+	botMsg += "\nCurrent ISO: " + isoAvailable['C']
 
-	Bot.sendMessage(ID, Bot_Message)
+	bot.sendMessage(ID, botMsg)
 	print "\n  Message sent."
 
 def commandSetISO(ID, Command):
-	ISO_Selected = Command.split(' ')[1]
-	ISO_Available = getDictFromCmd('gphoto2 --get-config iso')
+	isoSel = Command.split(' ')[1]
+	isoAvailable = getDictFromCmd('gphoto2 --get-config iso')
 
-	if ISO_Selected in ISO_Available:
-		command = "gphoto2 --set-config iso=" + str(ISO_Available[ISO_Selected])
+	if isoSel in isoAvailable:
+		command = "gphoto2 --set-config iso=" + str(isoAvailable[isoSel])
 		os.system(command)
 
-		Bot.sendMessage(ID, "ISO set to " + ISO_Available[ISO_Selected] + ".")
+		bot.sendMessage(ID, "ISO set to " + isoAvailable[isoSel] + ".")
 		print "\n  Message sent."
 		print "  ISO set."
 
 	else:
-		Bot.sendMessage(ID, "Your selected ISO value is not available.")
+		bot.sendMessage(ID, "Your selected ISO value is not available.")
 		print "\n  Message sent."
 		print "  ISO value not available."
 
 def commandGetAV(ID):
-	AV_Available = getDictFromCmd('gphoto2 --get-config aperture')
+	avAvailable = getDictFromCmd('gphoto2 --get-config aperture')
 
-	Bot_Message = "Available aperture values:\n\n"
-	for Key in AV_Available:
+	botMsg = "Available aperture values:\n\n"
+	for Key in avAvailable:
 		if Key != 'C':
-			Bot_Message += Key + ": f/" + AV_Available[Key] + "\n"
-	Bot_Message += "\nCurrent value: f/" + AV_Available['C']
+			botMsg += Key + ": f/" + avAvailable[Key] + "\n"
+	botMsg += "\nCurrent value: f/" + avAvailable['C']
 
-	Bot.sendMessage(ID, Bot_Message)
+	bot.sendMessage(ID, botMsg)
 	print "\n  Message sent."
 
 def commandSetAV(ID, Command):
-	AV_Selected = Command.split(' ')[1]
-	AV_Available = getDictFromCmd('gphoto2 --get-config aperture')
+	avSel = Command.split(' ')[1]
+	avAvailable = getDictFromCmd('gphoto2 --get-config aperture')
 
-	if AV_Selected in AV_Available:
-		command = "gphoto2 --set-config aperture=" + str(AV_Available[AV_Selected])
+	if avSel in avAvailable:
+		command = "gphoto2 --set-config aperture=" + str(avAvailable[avSel])
 		os.system(command)
 
-		Bot.sendMessage(ID, "AV set to F/" + AV_Available[AV_Selected] + ".")
+		bot.sendMessage(ID, "AV set to F/" + avAvailable[avSel] + ".")
 		print "\n  Message sent."
 		print "  AV set."
 
 	else:
-		Bot.sendMessage(ID, "Your selected aperture value is not available.")
+		bot.sendMessage(ID, "Your selected aperture value is not available.")
 		print "\n  Message sent."
 		print "  AV not available."
 
 def commandGetTV(ID):
-	TV_Available = getDictFromCmd('gphoto2 --get-config shutterspeed')
+	tvAvailable = getDictFromCmd('gphoto2 --get-config shutterspeed')
 
-	Bot_Message = "Available shutter speeds:\n\n"
-	for Key in TV_Available:
+	botMsg = "Available shutter speeds:\n\n"
+	for Key in tvAvailable:
 		if Key != 'C':
-			Bot_Message += Key + ": " + TV_Available[Key] + "\n"
-	Bot_Message += "\nCurrent value: " + TV_Available['C']
+			botMsg += Key + ": " + tvAvailable[Key] + "\n"
+	botMsg += "\nCurrent value: " + tvAvailable['C']
 
-	Bot.sendMessage(ID, Bot_Message)
+	bot.sendMessage(ID, botMsg)
 	print "\n  Message sent."
 
 def commandSetTV(ID, Command):
-	TV_Selected = Command.split(' ')[1]
-	TV_Available = getDictFromCmd('gphoto2 --get-config shutterspeed')
+	tvSel = Command.split(' ')[1]
+	tvAvailable = getDictFromCmd('gphoto2 --get-config shutterspeed')
 
-	if TV_Selected in TV_Available:
-		command = "gphoto2 --set-config shutterspeed=" + str(TV_Available[TV_Selected])
+	if tvSel in tvAvailable:
+		command = "gphoto2 --set-config shutterspeed=" + str(tvAvailable[tvSel])
 		os.system(command)
 
-		Bot.sendMessage(ID, "TV set to " + TV_Available[TV_Selected] + ".")
+		bot.sendMessage(ID, "TV set to " + tvAvailable[tvSel] + ".")
 		print "\n  Message sent."
 		print "  TV set."
 
 	else:
-		Bot.sendMessage(ID, "Your selected shutter speed is not available.")
+		bot.sendMessage(ID, "Your selected shutter speed is not available.")
 		print "\n  Message sent."
 		print "  TV not available."
 
@@ -236,15 +231,13 @@ def commandTakePicture(ID):
 
 	# ... and send it
 	Picture = open('tmp.jpg', 'rb')
-	Bot.sendPhoto(ID, Picture)
+	bot.sendPhoto(ID, Picture)
 
 	os.remove("tmp.jpg")
 
 	print "\n  Picture sent."
-########################################################################################################################
-##### TELEGRAM #########################################################################################################
-########################################################################################################################
-def accessNotfication(Time, ID, Title, Last_Name, First_Name, Command, SendToAdmin):
+
+def accessNotfication(Time, ID, Title, Last_Name, First_Name, Command, SendToadmin):
 	# Print the access in the cmd
 	print "\n- - - - - - - - - - - - - - - - - - - - - - - - - -\n"
 	print "  Access recognized.\n"
@@ -255,10 +248,10 @@ def accessNotfication(Time, ID, Title, Last_Name, First_Name, Command, SendToAdm
 	print "  Command:  " + str(Command)
 
 	# Send the access to the amdins (but not, if the admin accesses the bot)
-	if SendToAdmin and ID not in Admin_Users:
-		for Admin in Admin_Users:
-			Admin_Message = "Access recognized (Reminder).\n  Time: " + str(Time) + " (UTC)\n  ID: " + str(ID) + "\n  Title: " + str(Title) + "\n  User: " + str(Last_Name) + ", " + str(First_Name) + "\n  Command: " + str(Command)
-			Bot.sendMessage(Admin, Admin_Message) 
+	if SendToadmin and ID not in adminUsers:
+		for admin in adminUsers:
+			admin_Message = "Access recognized (Reminder).\n  Time: " + str(Time) + " (UTC)\n  ID: " + str(ID) + "\n  Title: " + str(Title) + "\n  User: " + str(Last_Name) + ", " + str(First_Name) + "\n  Command: " + str(Command)
+			bot.sendMessage(admin, admin_Message) 
 
 # The messageHandler processes the incomming messages from telegram
 def messageHandler(MSG):
@@ -286,7 +279,7 @@ def messageHandler(MSG):
 	Chat_Command = MSG['text']
 
 	# Process admin commands
-	if Chat_ID in Admin_Users:
+	if Chat_ID in adminUsers:
 		if Chat_Message_Type == 'private':
 			# ADD USER
 			if Chat_Command.startswith("/addUser "):
@@ -299,7 +292,7 @@ def messageHandler(MSG):
 			pass
 
 	# Check if user is allowed to send messages to the bot
-	if Chat_ID in Authorized_Users:
+	if Chat_ID in authUsers:
 		if Chat_Message_Type == 'private' or Chat_Message_Type == 'group':
 			# START
 			if Chat_Command == "/start":
@@ -349,38 +342,33 @@ def messageHandler(MSG):
 
 	# Unauthorized access
 	else:
-		Bot.sendMessage(Chat_ID, "Access denied.")
+		bot.sendMessage(Chat_ID, "Access denied.")
 		accessNotfication(Received_Time, Chat_ID, Chat_Title, Chat_Last_Name, Chat_First_Name, Chat_Command, True)
 		print "\n  Unauthorized user."
-########################################################################################################################
-##### MAIN #############################################################################################################
-########################################################################################################################
+
 if __name__ == "__main__":
 	# Create authorized users file, if non-existend
 	if not os.path.exists("auth_usr"):
-		File_Object = open("auth_usr", "w")
-		File_Object.close()
+		fileObject = open("auth_usr", "w")
+		fileObject.close()
 
 	# Get authorized users
-	File_Object = open("auth_usr", "r")
-	for Line in File_Object:
-		Authorized_Users.append(int(Line.split(' ')[0]))
+	fileObject = open("auth_usr", "r")
+	for line in fileObject:
+		authUsers.append(int(line.split(' ')[0]))
 
 	# Setup bot
-	Bot = telepot.Bot(Bot_Token)
-	Bot_Info = Bot.getMe()
-	Bot.message_loop(messageHandler)
+	bot = telepot.bot(botToken)
+	botInfo = bot.getMe()
+	bot.message_loop(messageHandler)
 
 	# Startup phrase
 	os.system('clear')
-	print "TELEBOT DSLR v1.0.0"
-	print Bot_Info['first_name'] + " initialized."
-	for Admin in Admin_Users:
-		Bot.sendMessage(Admin, "Telebot 'DSLR' started.")
+	print "TELEbot DSLR v1.0.0"
+	print botInfo['first_name'] + " initialized."
+	for admin in adminUsers:
+		bot.sendMessage(admin, "Telebot 'DSLR' started.")
 
 	# Loop
 	while True:
 		pass
-########################################################################################################################
-##### END OF CODE ######################################################################################################
-########################################################################################################################
